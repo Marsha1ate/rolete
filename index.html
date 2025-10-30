@@ -133,109 +133,117 @@
   </div>
   <button class="exit" id="exit">Выход</button>
 
-  <script>
-  const tg = window.Telegram?.WebApp;
-  const symbols = ["❤️","💎","🍀","⭐"];
-  const reels = [document.getElementById("r1"), document.getElementById("r2"), document.getElementById("r3")];
-  const msg = document.getElementById("msg");
-  const hintBox = document.getElementById("hint");
-  const btn = document.getElementById("spin");
-  const exitBtn = document.getElementById("exit");
-  tg.ready();
+<script>
+const symbols = ["❤️","💎","🍀","⭐"];
+const reels = [document.getElementById("r1"), document.getElementById("r2"), document.getElementById("r3")];
+const msg = document.getElementById("msg");
+const hintBox = document.getElementById("hint");
+const btn = document.getElementById("spin");
+const exitBtn = document.getElementById("exit");
 
-  const hints = ["посмотри под подушкой", "зеленой", "шкаф", "наверху"];
-  let jackpots = 0;
-  let SYMBOL_HEIGHT;
+const hints = ["посмотри под подушкой", "зеленой", "шкаф", "наверху"];
+let jackpots = 0;
+let SYMBOL_HEIGHT;
 
-  function updateSymbolHeight() {
+function updateSymbolHeight() {
     const reel = document.querySelector(".reel");
     SYMBOL_HEIGHT = reel.offsetHeight * 0.65;
-  }
+}
 
-  window.addEventListener("resize", updateSymbolHeight);
-  updateSymbolHeight();
+window.addEventListener("resize", updateSymbolHeight);
+updateSymbolHeight();
 
-  const TOTAL = symbols.length;
+const TOTAL = symbols.length;
 
-  function init() {
+function init() {
     reels.forEach(reel => {
-      reel.innerHTML = "";
-      for (let i = 0; i < 30; i++) {
-        const el = document.createElement("div");
-        el.className = "symbol";
-        el.textContent = symbols[i % TOTAL];
-        reel.appendChild(el);
-      }
+        reel.innerHTML = "";
+        for (let i = 0; i < 30; i++) {
+            const el = document.createElement("div");
+            el.className = "symbol";
+            el.textContent = symbols[i % TOTAL];
+            reel.appendChild(el);
+        }
     });
-  }
-  init();
+}
+init();
 
-  async function spin() {
+async function spin() {
     btn.disabled = true;
     msg.textContent = "💫 Крутится...";
 
     reels.forEach(reel => {
-      reel.style.transition = "none";
-      reel.style.transform = "translateY(0)";
+        reel.style.transition = "none";
+        reel.style.transform = "translateY(0)";
     });
     await new Promise(r => setTimeout(r, 50));
 
     const intervals = [];
     reels.forEach(reel => {
-      let current = 0;
-      const interval = setInterval(() => {
-        current = (current + 1) % TOTAL;
-        const offset = (current * SYMBOL_HEIGHT) % (TOTAL * SYMBOL_HEIGHT);
-        reel.style.transform = `translateY(-${offset}px)`;
-      }, 20);
-      intervals.push(interval);
+        let current = 0;
+        const interval = setInterval(() => {
+            current = (current + 1) % TOTAL;
+            const offset = (current * SYMBOL_HEIGHT) % (TOTAL * SYMBOL_HEIGHT);
+            reel.style.transform = `translateY(-${offset}px)`;
+        }, 20);
+        intervals.push(interval);
     });
 
     const results = [];
-
     for (let i = 0; i < reels.length; i++) {
-      await new Promise(r => setTimeout(r, 900));
-      clearInterval(intervals[i]);
-      const stopIndex = Math.floor(Math.random() * TOTAL);
-      reels[i].style.transition = "transform 0.8s ease-out";
-      reels[i].style.transform = `translateY(-${stopIndex * SYMBOL_HEIGHT}px)`;
-      results.push(symbols[stopIndex]);
+        await new Promise(r => setTimeout(r, 900));
+        clearInterval(intervals[i]);
+        const stopIndex = Math.floor(Math.random() * TOTAL);
+        reels[i].style.transition = "transform 0.8s ease-out";
+        reels[i].style.transform = `translateY(-${stopIndex * SYMBOL_HEIGHT}px)`;
+        results.push(symbols[stopIndex]);
     }
 
     await new Promise(r => setTimeout(r, 1200));
 
     if (results[0] === results[1] && results[1] === results[2]) {
-      jackpots++;
-      msg.textContent = `🎉 Джекпот #${jackpots}! Отлично!`;
+        jackpots++;
+        msg.textContent = `🎉 Джекпот #${jackpots}! Отлично!`;
 
-      updateHint();
+        updateHint();
 
-      if (jackpots >= 4) {
-        msg.textContent = "🎁 Приз находится под зеленой подушкой наверху белого шкафа!";
-        btn.disabled = true;
-      }
+        if (jackpots >= 4) {
+            msg.textContent = "🎁 Приз находится под зеленой подушкой наверху белого шкафа!";
+            btn.disabled = true;
+        }
 
-      tg?.sendData("jackpot" + jackpots);
+        if (window.Telegram?.WebApp) {
+            window.Telegram.WebApp.sendData("jackpot" + jackpots);
+        }
     } else {
-      msg.textContent = "😅 Не повезло, попробуй снова!";
+        msg.textContent = "😅 Не повезло, попробуй снова!";
     }
 
     btn.disabled = jackpots >= 4 ? true : false;
-  }
+}
 
-  function updateHint() {
+function updateHint() {
     if (jackpots <= hints.length) {
-      hintBox.textContent = `Подсказка ${jackpots}: ${hints[jackpots - 1]}`;
+        hintBox.textContent = `Подсказка ${jackpots}: ${hints[jackpots - 1]}`;
     }
-  }
+}
 
-  exitBtn.addEventListener("click", () => {
-    tg?.sendData("exit"); // отправляем событие в бота
-    tg?.close?.(); // закрываем мини-приложение
-  });
+btn.addEventListener("click", spin);
 
-  btn.addEventListener("click", spin);
+// ==================== Кнопка Выход ====================
+if (window.Telegram?.WebApp) {
+    const tg = window.Telegram.WebApp;
+    tg.ready(); // инициализация Telegram WebApp
+
+    exitBtn.addEventListener("click", () => {
+        tg.sendData("exit"); // отправка события боту
+        tg.close();           // закрытие миниапп
+    });
+} else {
+    exitBtn.addEventListener("click", () => {
+        alert("Приложение закрыто (WebApp API недоступен)");
+    });
+}
 </script>
-
 </body>
 </html>
