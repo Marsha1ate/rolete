@@ -135,113 +135,108 @@ button:disabled {
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-  const symbols = ["❤️","💎","🍀","⭐"];
-  const reels = [document.getElementById("r1"), document.getElementById("r2"), document.getElementById("r3")];
-  const msg = document.getElementById("msg");
-  const hintBox = document.getElementById("hint");
-  const btn = document.getElementById("spin");
-  const exitBtn = document.getElementById("exit");
+    const symbols = ["❤️","💎","🍀","⭐"];
+    const reels = [document.getElementById("r1"), document.getElementById("r2"), document.getElementById("r3")];
+    const msg = document.getElementById("msg");
+    const hintBox = document.getElementById("hint");
+    const btn = document.getElementById("spin");
+    const exitBtn = document.getElementById("exit");
 
-  const hints = ["посмотри под подушкой", "зеленой", "шкаф", "наверху"];
-  let jackpots = 0;
-  let SYMBOL_HEIGHT;
+    const hints = ["посмотри под подушкой", "зеленой", "шкаф", "наверху"];
+    let jackpots = 0;
+    let SYMBOL_HEIGHT;
 
-  function updateSymbolHeight() {
-      const reel = document.querySelector(".reel");
-      SYMBOL_HEIGHT = reel.offsetHeight * 0.65;
-  }
-  window.addEventListener("resize", updateSymbolHeight);
-  updateSymbolHeight();
+    function updateSymbolHeight() {
+        const reel = document.querySelector(".reel");
+        SYMBOL_HEIGHT = reel.offsetHeight * 0.65;
+    }
+    window.addEventListener("resize", updateSymbolHeight);
+    updateSymbolHeight();
 
-  const TOTAL = symbols.length;
+    const TOTAL = symbols.length;
 
-  function init() {
-      reels.forEach(reel => {
-          reel.innerHTML = "";
-          for (let i = 0; i < 30; i++) {
-              const el = document.createElement("div");
-              el.className = "symbol";
-              el.textContent = symbols[i % TOTAL];
-              reel.appendChild(el);
-          }
-      });
-  }
-  init();
+    function init() {
+        reels.forEach(reel => {
+            reel.innerHTML = "";
+            for (let i = 0; i < 30; i++) {
+                const el = document.createElement("div");
+                el.className = "symbol";
+                el.textContent = symbols[i % TOTAL];
+                reel.appendChild(el);
+            }
+        });
+    }
+    init();
 
-  async function spin() {
-      btn.disabled = true;
-      msg.textContent = "💫 Крутится...";
+    async function spin() {
+        btn.disabled = true;
+        msg.textContent = "💫 Крутится...";
 
-      reels.forEach(reel => {
-          reel.style.transition = "none";
-          reel.style.transform = "translateY(0)";
-      });
-      await new Promise(r => setTimeout(r, 50));
+        reels.forEach(reel => {
+            reel.style.transition = "none";
+            reel.style.transform = "translateY(0)";
+        });
+        await new Promise(r => setTimeout(r, 50));
 
-      const intervals = [];
-      reels.forEach(reel => {
-          let current = 0;
-          const interval = setInterval(() => {
-              current = (current + 1) % TOTAL;
-              const offset = (current * SYMBOL_HEIGHT) % (TOTAL * SYMBOL_HEIGHT);
-              reel.style.transform = `translateY(-${offset}px)`;
-          }, 20);
-          intervals.push(interval);
-      });
+        const intervals = [];
+        reels.forEach(reel => {
+            let current = 0;
+            const interval = setInterval(() => {
+                current = (current + 1) % TOTAL;
+                const offset = (current * SYMBOL_HEIGHT) % (TOTAL * SYMBOL_HEIGHT);
+                reel.style.transform = `translateY(-${offset}px)`;
+            }, 20);
+            intervals.push(interval);
+        });
 
-      const results = [];
-      for (let i = 0; i < reels.length; i++) {
-          await new Promise(r => setTimeout(r, 900));
-          clearInterval(intervals[i]);
-          const stopIndex = Math.floor(Math.random() * TOTAL);
-          reels[i].style.transition = "transform 0.8s ease-out";
-          reels[i].style.transform = `translateY(-${stopIndex * SYMBOL_HEIGHT}px)`;
-          results.push(symbols[stopIndex]);
-      }
+        const results = [];
+        for (let i = 0; i < reels.length; i++) {
+            await new Promise(r => setTimeout(r, 900));
+            clearInterval(intervals[i]);
+            const stopIndex = Math.floor(Math.random() * TOTAL);
+            reels[i].style.transition = "transform 0.8s ease-out";
+            reels[i].style.transform = `translateY(-${stopIndex * SYMBOL_HEIGHT}px)`;
+            results.push(symbols[stopIndex]);
+        }
 
-      await new Promise(r => setTimeout(r, 1200));
+        await new Promise(r => setTimeout(r, 1200));
 
-      if (results[0] === results[1] && results[1] === results[2]) {
-          jackpots++;
-          msg.textContent = `🎉 Джекпот #${jackpots}! Отлично!`;
-          updateHint();
+        if (results[0] === results[1] && results[1] === results[2]) {
+            jackpots++;
+            msg.textContent = `🎉 Джекпот #${jackpots}! Отлично!`;
+            if (jackpots <= hints.length) hintBox.textContent = `Подсказка ${jackpots}: ${hints[jackpots-1]}`;
 
-          if (jackpots >= 4) {
-              msg.textContent = "🎁 Приз находится под зеленой подушкой наверху белого шкафа!";
-              btn.disabled = true;
-          }
+            if (jackpots >= 4) {
+                msg.textContent = "🎁 Приз находится под зеленой подушкой наверху белого шкафа!";
+                btn.disabled = true;
+            }
 
-          if (window.Telegram?.WebApp) {
-              window.Telegram.WebApp.sendData("jackpot" + jackpots);
-          }
-      } else {
-          msg.textContent = "😅 Не повезло, попробуй снова!";
-      }
-      btn.disabled = jackpots >= 4 ? true : false;
-  }
+            if (window.Telegram?.WebApp) {
+                window.Telegram.WebApp.sendData("jackpot" + jackpots);
+            }
+        } else {
+            msg.textContent = "😅 Не повезло, попробуй снова!";
+        }
 
-  function updateHint() {
-      if (jackpots <= hints.length) {
-          hintBox.textContent = `Подсказка ${jackpots}: ${hints[jackpots - 1]}`;
-      }
-  }
+        btn.disabled = jackpots >= 4 ? true : false;
+    }
 
-  btn.addEventListener("click", spin);
+    btn.addEventListener("click", spin);
 
-  // ================= Кнопка Выход =================
-  if (window.Telegram?.WebApp) {
-      const tg = window.Telegram.WebApp;
-      tg.ready(); // безопасная инициализация
+    // ================= Кнопка Выход =================
+    if (window.Telegram?.WebApp) {
+        const tg = window.Telegram.WebApp;
+        if (tg.ready) tg.ready(); // безопасная инициализация
 
-      exitBtn.addEventListener("click", () => {
-          tg.sendData("exit"); // отправка события боту
-          tg.close();           // закрытие миниапп
-      });
-  } else {
-      exitBtn.addEventListener("click", () => {
-          alert("Приложение закрыто (WebApp API недоступен)");
-      });
-  }
+        exitBtn.addEventListener("click", () => {
+            tg.sendData("exit"); // отправка события боту
+            tg.close();           // закрытие миниапп
+        });
+    } else {
+        exitBtn.addEventListener("click", () => {
+            alert("Приложение закрыто (WebApp API недоступен)");
+        });
+    }
 });
 </script>
 </body>
