@@ -107,12 +107,6 @@ button:disabled {
   opacity: 0.8;
   line-height: 1.4em;
 }
-
-.exit {
-  margin-top: 4vh;
-  background: #ff4444;
-  color: white;
-}
 </style>
 </head>
 <body>
@@ -128,10 +122,8 @@ button:disabled {
 <div class="message" id="msg"></div>
 <div class="hint-box" id="hint"></div>
 <div class="instruction">
-  Чтобы полностью получить подсказку, выбей 4 раза джекпот и получишь 4 слова.<br>
-  Или, если найдёшь раньше — нажми кнопку выхода приложения.
+  Чтобы полностью получить подсказку, выбей 4 раза джекпот и получишь 4 слова.
 </div>
-<button class="exit" id="exit">Выход</button>
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -140,7 +132,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const msg = document.getElementById("msg");
     const hintBox = document.getElementById("hint");
     const btn = document.getElementById("spin");
-    const exitBtn = document.getElementById("exit");
 
     const hints = ["посмотри под подушкой", "зеленой", "шкаф", "наверху"];
     let jackpots = 0;
@@ -222,21 +213,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     btn.addEventListener("click", spin);
-
-    // ================= Кнопка Выход =================
-    if (window.Telegram?.WebApp) {
-        const tg = window.Telegram.WebApp;
-        if (tg.ready) tg.ready(); // безопасная инициализация
-
-        exitBtn.addEventListener("click", () => {
-            tg.sendData("exit"); // отправка события боту
-            tg.close();           // закрытие миниапп
-        });
-    } else {
-        exitBtn.addEventListener("click", () => {
-            alert("Приложение закрыто (WebApp API недоступен)");
-        });
-    }
 });
 </script>
 </body>
